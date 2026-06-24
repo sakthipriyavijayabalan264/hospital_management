@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospital Management System</title>
+  <style>
+    body {font-family: Arial, sans-serif; background:#F6F3EC;}
+    .login-card {background:#fff;padding:2rem;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);width:320px;margin:80px auto;}
+    .login-card h2 {text-align:center;margin-bottom:1rem;}
+    .login-card input, .login-card select {width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:4px;}
+    .login-card button {background:#0188df;color:#fff;padding:10px;border:none;border-radius:4px;cursor:pointer;width:100%;}
+    .login-card button:hover {background:#016bb5;}
+    .card {background:#fff;padding:1rem;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);margin:1rem;}
+    .hidden {display:none;}
+  </style>
+  <script>
+    function toggleForm(formId) {
+      const form = document.getElementById(formId);
+      form.classList.toggle("hidden");
+    }
+  </script>
+</head>
+<body>
+  {% if not session.get('user') %}
+  <!-- Login -->
+  <div class="login-card">
+    <h2>Hospital Login</h2>
+    <form action="/login" method="POST">
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <select name="role" required>
+        <option value="">Select Role</option>
+        <option value="Doctor">Doctor</option>
+        <option value="Patient">Patient</option>
+      </select>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+  {% else %}
+    {% if session['role'] == 'Doctor' %}
+      <h2>Welcome Doctor {{ session['user']['email'] }}</h2>
+      <h3>Patient Records</h3>
+      <form action="/add_patient" method="POST">
+        <input type="text" name="pname" placeholder="Patient Name" required><br><br>
+        <input type="number" name="page" placeholder="Age" required><br><br>
+        <input type="text" name="pgender" placeholder="Gender" required><br><br>
+        <input type="text" name="pcontact" placeholder="Contact" required><br><br>
+        <input type="text" name="paddress" placeholder="Address"><br><br>
+        <input type="text" name="disease" placeholder="Disease" required><br><br>
+        <button type="submit">Add Patient</button><br><br>
+      </form>
+      {% for p in patients %}
+        <div class="card">
+          <strong>{{ p.name }}</strong> - {{ p.disease }}
+          <button onclick="toggleForm('patient-form-{{ p.id }}')">Update</button>
+          <a href="/delete_patient/{{ p.id }}">Delete</a>
+          <form id="patient-form-{{ p.id }}" class="hidden" action="/update_patient/{{ p.id }}" method="POST">
+            <input type="text" name="pname" value="{{ p.name }}" required><br><br>
+            <input type="number" name="page" value="{{ p.age }}" required><br><br>
+            <input type="text" name="pgender" value="{{ p.gender }}" required><br><br>
+            <input type="text" name="pcontact" value="{{ p.contact }}" required><br><br>
+            <input type="text" name="paddress" value="{{ p.address }}"><br><br>
+            <input type="text" name="disease" value="{{ p.disease }}" required><br><br>
+            <button type="submit">Save</button><br><br>
+            <button type="button" onclick="toggleForm('patient-form-{{ p.id }}')">Cancel</button>
+          </form><br><br>
+        </div>
+      {% endfor %}
+      <h3>Overview</h3>
+      <div class="card">Total Patients: {{ patient_count }}</div>
+      <div class="card">Doctors: {{ doctor_count }}</div>
+    {% elif session['role'] == 'Patient' %}
+      <h2>Welcome Patient {{ session['user']['email'] }}</h2>
+      <h3>Doctor Directory</h3>
+      <form action="/add_doctor" method="POST">
+        <input type="text" name="dname" placeholder="Doctor Name" required><br><br>
+        <input type="text" name="dspeciality" placeholder="Speciality" required><br><br>
+        <input type="text" name="dcontact" placeholder="Contact" required><br><br>
+        <input type="email" name="demail" placeholder="Email" required><br><br>
+        <button type="submit">Add Doctor</button><br><br>
+      </form>
+      {% for d in doctors %}
+        <div class="card">
+          <strong>{{ d.name }}</strong> - {{ d.speciality }}
+          <button onclick="toggleForm('doctor-form-{{ d.id }}')">Update</button>
+          <a href="/delete_doctor/{{ d.id }}">Delete</a>
+          <form id="doctor-form-{{ d.id }}" class="hidden" action="/update_doctor/{{ d.id }}" method="POST"><br><br>
+            <input type="text" name="dname" value="{{ d.name }}" required><br><br>
+            <input type="text" name="dspeciality" value="{{ d.speciality }}" required><br><br>
+            <input type="text" name="dcontact" value="{{ d.contact }}" required><br><br>
+            <input type="email" name="demail" value="{{ d.email }}" required><br><br>
+            <button type="submit">Save</button><br><br>
+            <button type="button" onclick="toggleForm('doctor-form-{{ d.id }}')">Cancel</button><br><br>
+          </form>
+        </div>
+      {% endfor %}
+      <h3>Overview</h3>
+      <div class="card">Total Patients: {{ patient_count }}</div>
+      <div class="card">Doctors: {{ doctor_count }}</div>
+    {% endif %}
+    <a href="/logout">Logout</a>
+  {% endif %}
+</body>
+</html>
+
